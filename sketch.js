@@ -1,238 +1,199 @@
-// Rio (ilustrado) + Zoom out final para "mapa" de delta/estuário inspirado na imagem
+// Rio satélite suave + zoom out para delta (30s até tela final)
 // p5.js
-let speed = 1.35;
-let zoomDuration = 420;
+
+// -------------------- TEMPO --------------------
+const FPS = 60;
+const TOTAL_SECONDS = 30;
+const ZOOM_SECONDS = 5;
+
+// -------------------- MUNDO --------------------
+let worldH = 9000;
+let camY = 0;
+let speed = 1.2;         // calculado no setup
+let mode = "journey";    // "journey" | "zoomout"
+let zoomStartFrame = 0;
+let zoomDuration = ZOOM_SECONDS * FPS;
+
+// -------------------- TEXTURAS --------------------
+let landTex;   // textura tile do "satélite" (terra/vegetação)
+let mapG;      // delta final (offscreen)
+let deltaNet;  // linhas de canais
+
+// -------------------- ÁGUA (partículas) --------------------
+let particles = [];
+const N_PART = 700;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   pixelDensity(1);
 
-  const TOTAL_SECONDS = 30;
-  const ZOOM_SECONDS = 5;
-  const FPS = 60;
-
+  // 30s total: (TOTAL - ZOOM) para viajar; ZOOM para zoom out
   zoomDuration = ZOOM_SECONDS * FPS;
-
-  const travelFrames = (TOTAL_SECONDS - ZOOM_SECONDS) * FPS;
+  const travelFrames = max(1, (TOTAL_SECONDS - ZOOM_SECONDS) * FPS);
   speed = (worldH - height) / travelFrames;
 
-  // resto do setup...
-}
-let camY = 0;
-let worldH = 9000;
-
-
-// transição final
-let mode = "journey";     // "journey" | "zoomout"
-let zoomStartFrame = 0;
-
-
-// partículas
-let particles = [];
-const N_PART = 850;
-
-// mapa do delta (offscreen)
-let mapG;
-let delta = null;
-
-function setup() {
-  createCanvas(windowWidth, windowHeight);
-  pixelDensity(1);
+  // textura de terra (tile)
+  landTex = makeSatelliteLandTile(900, 700, 42);
 
   // partículas
-  for (let i = 0; i < N_PART; i++) particles.push(spawnParticle(random(worldH)));
+  for (let i = 0; i < N_PART; i++) particles.push(spawnParticle());
 
-  // gera mapa do delta uma vez
+  // delta final
   buildDeltaMap();
 }
 
 function draw() {
-  const t = frameCount * 0.008;
+  const t = frameCount * 0.01;
 
   if (mode === "journey") {
     camY += speed;
-    if (camY > worldH - height) camY = worldH - height;
-
-    drawIllustratedBackground(camY, t);
-    drawIllustratedTerrainAndForest(camY, t);
-    drawIllustratedRiver(camY, t);
-    drawBankTrees(camY, t);
-    updateParticles(camY, t);
-    drawInkWash(camY, t);
-
-    // quando chega perto do final, dispara o zoom out
-    if (camY >= worldH - height - 30) {
+    if (camY >= worldH - height) {
+      camY = worldH - height;
       mode = "zoomout";
       zoomStartFrame = frameCount;
     }
+
+    drawSatelliteBackground(t);
+    drawRiver(camY, t);
+    updateParticles(camY, t);
+    drawAtmosHaze(camY, t);
+
   } else {
-    // transição de zoom out + mapa delta
-    const u = constrain((frameCount - zoomStartFrame) / zoomDuration, 0, 1);
-    const e = easeInOutCubic(u);
-
-    // fundo "papel"
-    background(236, 232, 220);
-
-    // desenha o mapa com escala animada (começa grande e vai "saindo")
-    // scale vai de ~1.35 (perto) para ~0.85 (mais afastado)
-    const s = lerp(1.35, 0.85, e);
-    // leve drift pra dar sensação de câmera estabilizando
-    const driftX = (noise(frameCount * 0.01) - 0.5) * 10 * (1 - e);
-    const driftY = (noise(999 + frameCount * 0.01) - 0.5) * 10 * (1 - e);
-
-    push();
-    translate(width / 2 + driftX, height / 2 + driftY);
-    scale(s);
-    translate(-mapG.width / 2, -mapG.height / 2);
-    image(mapG, 0, 0);
-    pop();
-
-    // texto suave (opcional)
-    drawCaption(e);
-
-    // se quiser loopar a viagem: quando terminar o zoom, reinicia
-    // (se não quiser, pode remover esse bloco)
-    if (u >= 1) {
-      // fica parado mostrando o delta (sem reiniciar)
-      // (comente as próximas 2 linhas se quiser reiniciar em loop)
-      // camY = 0; mode = "journey";
-    }
+    drawFinalZoomOut();
   }
 }
 
-// ------------------------------------------------------------
-// ILUSTRAÇÃO: BACKGROUND / PAPEL / ATMOSFERA
-// ------------------------------------------------------------
-function drawIllustratedBackground(camY, t) {
-  // base de "papel" + gradiente por zona
-  for (let y = 0; y < height; y += 3) {
+// ============================================================
+// FUNDO SATÉLITE (tile + variação por faixa do mundo)
+// ============================================================
+function drawSatelliteBackground(t) {
+  // tile base
+  for (let y = 0; y < height; y += landTex.height) {
+    for (let x = 0; x < width; x += landTex.width) {
+      image(landTex, x, y);
+    }
+  }
+
+  // ajuste de "bioma" por zona (tintas bem suaves por cima)
+  noStroke();
+  for (let y = 0; y < height; y += 6) {
     const worldY = camY + y;
     const z = z01(worldY);
     const zone = zoneAt(worldY);
 
-    // paleta ilustrada (mais fosca)
+    // overlay bem sutil (muda sensação por trecho)
+    let ov;
+    if (zone === "spring") ov = color(210, 220, 230, 10);     // serra mais fria
+    else if (zone === "forest") ov = color(40, 80, 55, 10);   // mata mais densa
+    else if (zone === "plain") ov = color(80, 95, 60, 8);     // planície
+    else if (zone === "estuary") ov = color(60, 90, 70, 10);  // mangue/estuário
+    else ov = color(50, 70, 110, 10);                         // oceano
+
+    fill(ov);
+    rect(0, y, width, 6);
+  }
+}
+
+// tile de textura "satélite suave": solo + vegetação em mosaico + granulação
+function makeSatelliteLandTile(w, h, seed) {
+  randomSeed(seed);
+  noiseSeed(seed);
+
+  const g = createGraphics(w, h);
+  g.pixelDensity(1);
+
+  // base “solo”
+  g.background(38, 52, 42);
+
+  // mosaico de vegetação (tons variados)
+  g.noStroke();
+  for (let i = 0; i < 1200; i++) {
+    const x = random(w), y = random(h);
+    const n = noise(x * 0.008, y * 0.008);
+
+    // paleta satélite: oliva/musgo/escuro/clareira
+    const c1 = color(18, 45, 28, 40);
+    const c2 = color(28, 62, 35, 40);
+    const c3 = color(55, 85, 45, 36);
+    const c4 = color(92, 110, 62, 30);
+
     let c;
-    if (zone === "spring") c = color(230, 232, 225);
-    else if (zone === "forest") c = color(226, 232, 224);
-    else if (zone === "plain") c = color(228, 232, 222);
-    else if (zone === "estuary") c = color(230, 231, 224);
-    else c = color(232, 232, 226);
+    if (n < 0.33) c = lerpColor(c1, c2, n / 0.33);
+    else if (n < 0.66) c = lerpColor(c2, c3, (n - 0.33) / 0.33);
+    else c = lerpColor(c3, c4, (n - 0.66) / 0.34);
 
-    // leve “lavagem” com ruído
-    const wash = map(noise(y * 0.01, t * 0.2), 0, 1, 0.95, 1.05);
-    fill(red(c) * wash, green(c) * wash, blue(c) * wash, 255);
-    rect(0, y, width, 3);
+    g.fill(c);
+    g.ellipse(x, y, random(10, 60), random(10, 55));
   }
-}
 
-function drawInkWash(camY, t) {
-  // vinheta suave + granulação (ilustrado)
-  noStroke();
-  for (let i = 0; i < 10; i++) {
-    const a = 10;
-    fill(40, 35, 30, a);
-    ellipse(width * 0.5, height * 0.5, width * (1.0 + i * 0.08), height * (1.0 + i * 0.08));
+  // manchas de solo/clareira
+  for (let i = 0; i < 220; i++) {
+    g.fill(80, 74, 55, random(10, 22));
+    g.ellipse(random(w), random(h), random(30, 180), random(20, 120));
   }
-  // leve “grão”
-  stroke(60, 55, 45, 10);
-  strokeWeight(1);
-  for (let k = 0; k < 220; k++) {
-    point(random(width), random(height));
+
+  // sombras de copa (vendem realismo)
+  for (let i = 0; i < 350; i++) {
+    g.fill(0, 0, 0, random(8, 18));
+    g.ellipse(random(w), random(h), random(40, 220), random(30, 150));
   }
-}
 
-// ------------------------------------------------------------
-// ILUSTRAÇÃO: RELEVO + MATA (silhueta + textura)
-// ------------------------------------------------------------
-function drawIllustratedTerrainAndForest(camY, t) {
-  const zMid = z01(camY + height * 0.5);
+  // granulação fina (satélite)
+  g.stroke(15, 20, 16, 18);
+  for (let i = 0; i < 12000; i++) g.point(random(w), random(h));
 
-  // massa de relevo (serra) no topo da viagem
-  if (zMid < 0.30) {
-    noStroke();
-    fill(70, 90, 70, 35);
-    beginShape();
-    vertex(0, height);
-    for (let x = 0; x <= width; x += 16) {
-      const n = noise(x * 0.004, (camY * 0.0007) + t * 0.25);
-      const yy = height * 0.65 - n * (width * 0.20);
-      vertex(x, yy);
+  // “linhas” orgânicas sutis (drenagem/relvo)
+  g.stroke(120, 135, 105, 10);
+  g.strokeWeight(1);
+  for (let k = 0; k < 90; k++) {
+    let x = random(w), y = random(h);
+    g.beginShape();
+    for (let i = 0; i < 40; i++) {
+      const a = noise(200 + x * 0.01, 200 + y * 0.01) * TWO_PI * 2;
+      x += cos(a) * 3.2;
+      y += sin(a) * 2.6;
+      g.curveVertex(x, y);
     }
-    vertex(width, height);
-    endShape(CLOSE);
+    g.endShape();
   }
 
-  // manchas de vegetação (pinceladas)
-  noStroke();
-  const step = 22;
-  for (let y = 0; y < height; y += step) {
-    const worldY = camY + y;
-    const zone = zoneAt(worldY);
-    if (zone === "ocean") continue;
-
-    let dens = 0.0;
-    if (zone === "forest") dens = 0.85;
-    if (zone === "plain") dens = 0.35;
-    if (zone === "spring") dens = 0.20;
-    if (zone === "estuary") dens = 0.50;
-
-    for (let i = 0; i < 6; i++) {
-      const x = random(width);
-      const n = noise(x * 0.01, worldY * 0.01);
-      if (n > 0.60 && random() < dens * 0.12) {
-        fill(40, 70, 45, 22);
-        ellipse(x, y + random(-10, 10), random(30, 90), random(18, 60));
-      }
-    }
-  }
+  return g;
 }
 
-// ------------------------------------------------------------
-// ILUSTRAÇÃO: RIO (traço + preenchimento + textura)
-// ------------------------------------------------------------
-function drawIllustratedRiver(camY, t) {
+// ============================================================
+// RIO (polígono + cor variável + brilho suave)
+// ============================================================
+function drawRiver(camY, t) {
   const step = 14;
-  let left = [];
-  let right = [];
+  let L = [], R = [];
 
   for (let sy = -step; sy <= height + step; sy += step) {
     const worldY = camY + sy;
     const e = riverEdges(worldY, t);
-    left.push({ x: e.left, y: sy });
-    right.push({ x: e.right, y: sy });
+    L.push({ x: e.left, y: sy });
+    R.push({ x: e.right, y: sy });
   }
 
   const zone = zoneAt(camY + height * 0.5);
 
-  // cores mais “tinta”
-  let fillC = color(120, 175, 185, 140);
-  if (zone === "forest") fillC = color(110, 165, 175, 150);
-  if (zone === "estuary") fillC = color(105, 160, 170, 155);
-  if (zone === "ocean") fillC = color(95, 145, 165, 165);
+  // água “satélite” (verde-azulada no meio; mais clara no estuário; mais azul no oceano)
+  let water = color(75, 130, 125, 185);
+  if (zone === "spring")  water = color(85, 150, 150, 190);
+  if (zone === "forest")  water = color(65, 120, 115, 190);
+  if (zone === "plain")   water = color(68, 125, 120, 190);
+  if (zone === "estuary") water = color(82, 150, 150, 195);
+  if (zone === "ocean")   water = color(60, 95, 140, 205);
 
-  // preenchimento
+  // preenchimento do leito
   noStroke();
-  fill(fillC);
+  fill(water);
   beginShape();
-  for (const p of left) vertex(p.x, p.y);
-  for (let i = right.length - 1; i >= 0; i--) vertex(right[i].x, right[i].y);
+  for (const p of L) vertex(p.x, p.y);
+  for (let i = R.length - 1; i >= 0; i--) vertex(R[i].x, R[i].y);
   endShape(CLOSE);
 
-  // contorno "mão" (duas passadas com jitter)
-  for (let pass = 0; pass < 2; pass++) {
-    stroke(25, 40, 45, pass === 0 ? 70 : 35);
-    strokeWeight(pass === 0 ? 1.5 : 1.0);
-    noFill();
-    beginShape();
-    for (const p of left) vertex(p.x + jitter1(pass), p.y);
-    endShape();
-    beginShape();
-    for (const p of right) vertex(p.x + jitter1(pass), p.y);
-    endShape();
-  }
-
-  // textura interna (linhas de corrente)
-  stroke(240, 250, 250, 35);
+  // brilho/sedimento (textura dentro da água)
+  stroke(230, 245, 245, 26);
   strokeWeight(1);
   const lines = 10;
   for (let k = 0; k < lines; k++) {
@@ -242,71 +203,36 @@ function drawIllustratedRiver(camY, t) {
       const e = riverEdges(worldY, t);
       const u = (k + 1) / (lines + 1);
       let x = lerp(e.cx - e.hw, e.cx + e.hw, u);
-      x += map(noise(k * 11, worldY * 0.01, t * 1.4), 0, 1, -14, 14);
-      vertex(x, sy);
+      x += map(noise(k * 9, worldY * 0.01, t), 0, 1, -12, 12);
+      curveVertex(x, sy);
     }
     endShape();
   }
-}
 
-function drawBankTrees(camY, t) {
-  // árvores simples (ícone) distribuídas ao longo das margens
-  // determinístico via noise (não explode a cena)
-  const step = 26;
-  for (let sy = 0; sy <= height; sy += step) {
-    const worldY = camY + sy;
-    const zone = zoneAt(worldY);
-    if (zone === "ocean") continue;
-
-    const e = riverEdges(worldY, t);
-
-    // lado esquerdo
-    placeTreeLine(e.left - 18, sy, worldY, -1);
-
-    // lado direito
-    placeTreeLine(e.right + 18, sy, worldY, +1);
+  // oceano: ondulação leve na parte inferior
+  if (zone === "ocean") {
+    stroke(255, 255, 255, 18);
+    for (let i = 0; i < 10; i++) {
+      const yy = height * 0.55 + i * 22;
+      beginShape();
+      for (let x = 0; x <= width; x += 18) {
+        vertex(x, yy + sin(x * 0.02 + t * 2 + i) * 6);
+      }
+      endShape();
+    }
   }
 }
 
-function placeTreeLine(baseX, sy, worldY, side) {
-  // chance de árvore aumenta na mata, diminui na planície
-  const zone = zoneAt(worldY);
-  let p = 0.0;
-  if (zone === "forest") p = 0.45;
-  if (zone === "spring") p = 0.20;
-  if (zone === "plain") p = 0.18;
-  if (zone === "estuary") p = 0.30;
-
-  const n = noise(baseX * 0.02, worldY * 0.01);
-  if (n < 0.62 || random() > p) return;
-
-  const x = baseX + side * random(6, 34);
-  const h = random(18, 36);
-
-  // tronco
-  stroke(40, 55, 45, 85);
-  strokeWeight(2);
-  line(x, sy + h * 0.35, x, sy + h);
-
-  // copa (triângulo + bolinhas)
-  noStroke();
-  fill(25, 60, 40, 90);
-  triangle(x, sy, x - h * 0.35, sy + h * 0.55, x + h * 0.35, sy + h * 0.55);
-  fill(25, 70, 45, 55);
-  ellipse(x - h * 0.18, sy + h * 0.35, h * 0.35, h * 0.28);
-  ellipse(x + h * 0.18, sy + h * 0.35, h * 0.35, h * 0.28);
-}
-
-// ------------------------------------------------------------
-// PARTÍCULAS (correnteza)
-// ------------------------------------------------------------
-function spawnParticle(worldY) {
+// ============================================================
+// PARTÍCULAS (correnteza discreta)
+// ============================================================
+function spawnParticle() {
   return {
     x: random(width),
     y: random(height),
-    speed: random(0.7, 1.8),
+    speed: random(0.8, 1.8),
     size: random(1.0, 2.0),
-    life: random(80, 240)
+    life: random(80, 220)
   };
 }
 
@@ -315,46 +241,92 @@ function updateParticles(camY, t) {
     const worldY = camY + p.y;
     const e = riverEdges(worldY, t);
 
+    // fluxo: puxa pro centro + desce
     let vx = map(noise(p.x * 0.003, worldY * 0.004, t), 0, 1, -0.8, 0.8);
-    let vy = map(noise(500 + p.x * 0.002, worldY * 0.003, t), 0, 1, 0.9, 1.7);
-
-    // puxa pro centro
-    vx += (e.cx - p.x) * 0.002;
+    let vy = map(noise(500 + p.x * 0.002, worldY * 0.003, t), 0, 1, 1.0, 1.8);
+    vx += (e.cx - p.x) * 0.0022;
 
     p.x += vx * p.speed;
     p.y += vy * p.speed;
 
+    // manter dentro do leito
     if (p.x < e.left + 6 || p.x > e.right - 6) {
       p.x = lerp(e.left + 10, e.right - 10, random());
     }
 
-    // desenha espuma discreta
-    stroke(250, 255, 255, 55);
+    // desenha
+    stroke(245, 255, 255, 45);
     strokeWeight(p.size);
     point(p.x, p.y);
 
+    // recicla
     p.life -= 1;
     if (p.y > height + 40 || p.life <= 0) {
       p.y = random(-80, -10);
       p.x = random(width);
-      p.life = random(90, 260);
+      p.life = random(90, 240);
     }
   }
 }
 
-// ------------------------------------------------------------
-// MAPA DO DELTA (zoom out final)
-// ------------------------------------------------------------
+// ============================================================
+// ATMOSFERA (neblina/umidade suave por cima)
+// ============================================================
+function drawAtmosHaze(camY, t) {
+  const zMid = z01(camY + height * 0.5);
+
+  // mais neblina na serra e um pouco no estuário/oceano
+  let strength = 0.0;
+  if (zMid < 0.22) strength = lerp(0.55, 0.20, smoothstep(0.02, 0.22, zMid));
+  if (zMid > 0.75) strength = max(strength, lerp(0.10, 0.30, smoothstep(0.75, 1.0, zMid)));
+
+  noStroke();
+  for (let i = 0; i < 8; i++) {
+    const yy = (i / 8) * height;
+    const a = 22 * strength;
+    fill(220, 240, 255, a);
+    ellipse(width * 0.5, yy, width * (1.15 + noise(i * 10, t * 0.2) * 0.25), height * 0.22);
+  }
+}
+
+// ============================================================
+// ZOOM OUT FINAL (delta estilo satélite suave)
+// ============================================================
+function drawFinalZoomOut() {
+  const u = constrain((frameCount - zoomStartFrame) / zoomDuration, 0, 1);
+  const e = easeInOutCubic(u);
+
+  background(20, 28, 24);
+
+  // escala: começa mais "perto", sai para revelar o delta
+  const s = lerp(1.35, 0.88, e);
+
+  // drift discreto no começo
+  const drift = (1 - e);
+  const dx = (noise(frameCount * 0.01) - 0.5) * 18 * drift;
+  const dy = (noise(999 + frameCount * 0.01) - 0.5) * 18 * drift;
+
+  push();
+  translate(width / 2 + dx, height / 2 + dy);
+  scale(s);
+  translate(-mapG.width / 2, -mapG.height / 2);
+  image(mapG, 0, 0);
+  pop();
+
+  // legenda minimal (some no começo e aparece no fim)
+  noStroke();
+  fill(235, 245, 240, 180 * e);
+  textAlign(LEFT, BOTTOM);
+  textSize(14);
+  text("Delta / Estuário — satélite suave", 16, height - 16);
+}
+
 function buildDeltaMap() {
-  const mw = 1200;  // pode aumentar pra mais detalhe
-  const mh = 800;
+  const mw = 1200, mh = 800;
   mapG = createGraphics(mw, mh);
   mapG.pixelDensity(1);
 
-  // gera rede de canais
-  delta = generateDeltaNetwork(mw, mh, 1234);
-
-  // desenha uma vez (estilo ilustrado)
+  deltaNet = generateDeltaNetwork(mw, mh, 1234);
   renderDeltaMap();
 }
 
@@ -364,67 +336,63 @@ function generateDeltaNetwork(mw, mh, seed) {
 
   const polylines = [];
 
-  // canal principal
+  // canal principal (mais largo)
   const main = [];
-  let x = mw * 0.58;
+  let x = mw * 0.62;
   let y = mh * 0.12;
-  let ang = PI / 2 + random(-0.15, 0.15);
+  let ang = PI / 2 + random(-0.12, 0.12);
 
-  const steps = 220;
+  const steps = 240;
   for (let i = 0; i < steps; i++) {
     main.push({ x, y });
 
-    // meandro suave
     const n = noise(i * 0.06, seed * 0.01);
-    ang += map(n, 0, 1, -0.07, 0.07);
+    ang += map(n, 0, 1, -0.06, 0.06);
 
-    // tendência a abrir leque no fim (estuário)
     const t = i / steps;
-    ang += map(noise(99 + i * 0.04), 0, 1, -0.02, 0.02) + (t > 0.6 ? random(-0.02, 0.02) : 0);
-
-    const sp = lerp(3.2, 4.2, t);
+    const sp = lerp(3.0, 4.4, t);
     x += cos(ang) * sp;
     y += sin(ang) * sp;
 
-    // mantém no quadro
-    x = constrain(x, 60, mw - 60);
-    y = constrain(y, 50, mh - 60);
-  }
-  polylines.push({ pts: main, w: 24 });
+    // abre o leque no fim
+    if (t > 0.62) x += random(-0.8, 0.8);
 
-  // ramificações (tipo imagem)
-  const branchCount = 42;
+    x = constrain(x, 70, mw - 70);
+    y = constrain(y, 60, mh - 60);
+  }
+  polylines.push({ pts: main, w: 28 });
+
+  // ramificações (labirinto)
+  const branchCount = 70;
   for (let b = 0; b < branchCount; b++) {
-    // escolhe um ponto na parte final do canal principal
-    const idx = floor(random(80, steps - 10));
+    const idx = floor(random(90, steps - 12));
     const p0 = main[idx];
     const p1 = main[min(idx + 1, main.length - 1)];
-
     const dir = atan2(p1.y - p0.y, p1.x - p0.x);
+
     const sign = random() < 0.5 ? -1 : 1;
-    let a = dir + sign * random(0.25, 1.10);
+    let a = dir + sign * random(0.35, 1.25);
 
-    let bx = p0.x + random(-6, 6);
-    let by = p0.y + random(-6, 6);
+    let bx = p0.x + random(-8, 8);
+    let by = p0.y + random(-8, 8);
 
-    const len = floor(random(40, 140));
+    const len = floor(random(60, 190));
     const pts = [];
     for (let i = 0; i < len; i++) {
       pts.push({ x: bx, y: by });
 
-      const nn = noise(500 + b * 10, i * 0.06);
+      const nn = noise(500 + b * 10, i * 0.05);
       a += map(nn, 0, 1, -0.08, 0.08);
 
-      const t = i / len;
-      const sp = lerp(2.4, 3.6, t);
+      const tt = i / len;
+      const sp = lerp(2.2, 3.8, tt);
       bx += cos(a) * sp;
       by += sin(a) * sp;
 
-      // “atrai” para fora (abre o delta)
+      // puxa para baixo (mar)
       by += 0.35;
 
-      // limites
-      if (bx < 30 || bx > mw - 30 || by < 30 || by > mh - 30) break;
+      if (bx < 35 || bx > mw - 35 || by < 35 || by > mh - 35) break;
     }
 
     const w = random(6, 14);
@@ -436,25 +404,20 @@ function generateDeltaNetwork(mw, mh, seed) {
 
 function renderDeltaMap() {
   const g = mapG;
-  g.clear();
+  g.background(18, 28, 22);
 
-  // papel
-  g.background(236, 232, 220);
-
-  // massa de vegetação (pinceladas)
-  g.noStroke();
-  for (let i = 0; i < 260; i++) {
-    const x = random(g.width);
-    const y = random(g.height);
-    const a = random(12, 26);
-    g.fill(70, 110, 75, a);
-    g.ellipse(x, y, random(40, 160), random(30, 120));
+  // textura de terra (satélite) por baixo
+  // (mini-tile gerado inline)
+  const tile = makeSatelliteLandTile(600, 450, 99);
+  for (let y = 0; y < g.height; y += tile.height) {
+    for (let x = 0; x < g.width; x += tile.width) {
+      g.image(tile, x, y);
+    }
   }
 
-  // canais (primeiro preenchimento largo, depois contorno)
-  for (const pl of delta) {
-    // “água” levemente esverdeada
-    g.stroke(120, 185, 190, 165);
+  // água (preenchimento dos canais) - 2 passadas: largo + contorno leve
+  for (const pl of deltaNet) {
+    g.stroke(92, 160, 155, 210);
     g.strokeWeight(pl.w);
     g.noFill();
     g.beginShape();
@@ -462,80 +425,73 @@ function renderDeltaMap() {
     g.endShape();
   }
 
-  // contorno escuro (tinta)
-  for (const pl of delta) {
-    g.stroke(35, 55, 60, 90);
-    g.strokeWeight(max(1.2, pl.w * 0.08));
+  // contorno escuro nas margens (define canais)
+  for (const pl of deltaNet) {
+    g.stroke(10, 18, 16, 120);
+    g.strokeWeight(max(1.2, pl.w * 0.10));
     g.noFill();
     g.beginShape();
-    for (const p of pl.pts) g.curveVertex(p.x + map(noise(p.x * 0.02, p.y * 0.02), 0, 1, -1.5, 1.5), p.y);
+    for (const p of pl.pts) {
+      const j = (noise(p.x * 0.02, p.y * 0.02) - 0.5) * 2.0;
+      g.curveVertex(p.x + j, p.y);
+    }
     g.endShape();
   }
 
-  // canais menores “brilhos”
-  g.stroke(245, 252, 252, 45);
+  // brilhos/espelhos na água
+  g.stroke(245, 255, 255, 32);
   g.strokeWeight(1);
-  for (let i = 0; i < 2200; i++) {
+  for (let i = 0; i < 2600; i++) {
     const x = random(g.width);
     const y = random(g.height);
     const n = noise(x * 0.01, y * 0.01);
-    if (n > 0.55) g.point(x, y);
+    if (n > 0.62) g.point(x, y);
   }
 
-  // árvores/vegetação em ícones (bem leve)
-  for (let i = 0; i < 260; i++) {
-    const x = random(g.width);
-    const y = random(g.height);
-    const n = noise(100 + x * 0.01, 200 + y * 0.01);
-    if (n < 0.52) continue;
-    drawTinyTree(g, x, y, random(8, 16));
-  }
-
-  // “mar” no canto inferior direito (sugestão)
+  // oceano sugerido (baixo)
   g.noStroke();
-  g.fill(180, 210, 220, 120);
-  g.ellipse(g.width * 0.85, g.height * 0.92, g.width * 0.9, g.height * 0.6);
+  g.fill(40, 70, 110, 120);
+  g.ellipse(g.width * 0.72, g.height * 0.92, g.width * 1.2, g.height * 0.65);
 }
 
-function drawTinyTree(g, x, y, s) {
-  g.noStroke();
-  g.fill(40, 85, 55, 70);
-  g.triangle(x, y - s * 0.9, x - s * 0.6, y + s * 0.2, x + s * 0.6, y + s * 0.2);
-  g.fill(40, 70, 50, 60);
-  g.ellipse(x, y - s * 0.15, s * 0.7, s * 0.55);
-}
-
-// ------------------------------------------------------------
-// RIO: geometria (igual antes)
-// ------------------------------------------------------------
+// ============================================================
+// GEOMETRIA DO RIO DA VIAGEM
+// ============================================================
 function riverCenterX(worldY, t) {
   const z = z01(worldY);
   const cx0 = width * 0.5;
-  const amp = lerp(width * 0.03, width * 0.22, smoothstep(0.08, 0.75, z));
+
+  // meandro cresce ao longo do curso
+  const amp = lerp(width * 0.04, width * 0.24, smoothstep(0.08, 0.80, z));
+
   const n1 = noise(worldY * 0.0015, t * 0.45);
   const n2 = noise(1000 + worldY * 0.004, t * 0.9);
-  const n = (n1 * 0.65 + n2 * 0.35);
+  const n = n1 * 0.65 + n2 * 0.35;
+
   return cx0 + map(n, 0, 1, -amp, amp);
 }
 
 function riverHalfWidth(worldY, t) {
   const z = z01(worldY);
-  const base = lerp(width * 0.028, width * 0.13, smoothstep(0.05, 0.70, z));
-  const est = lerp(0, width * 0.11, smoothstep(0.75, 0.95, z));
-  const wobble = map(noise(2000 + worldY * 0.003, t * 0.6), 0, 1, -0.12, 0.12);
-  return (base + est) * (1 + wobble * 0.25);
+
+  // cresce: nascente estreita -> rio -> estuário bem largo
+  const base = lerp(width * 0.03, width * 0.13, smoothstep(0.05, 0.70, z));
+  const est = lerp(0, width * 0.12, smoothstep(0.74, 0.96, z));
+  const wob = map(noise(2000 + worldY * 0.003, t * 0.6), 0, 1, -0.12, 0.12);
+
+  return (base + est) * (1 + wob * 0.22);
 }
 
 function riverEdges(worldY, t) {
   const cx = riverCenterX(worldY, t);
   const hw = riverHalfWidth(worldY, t);
-  const jitter = map(noise(3000 + worldY * 0.02, t * 1.4), 0, 1, -8, 8);
-  return { left: cx - hw + jitter, right: cx + hw + jitter, cx, hw };
+  const j = map(noise(3000 + worldY * 0.02, t * 1.2), 0, 1, -8, 8);
+  return { left: cx - hw + j, right: cx + hw + j, cx, hw };
 }
 
-// ------------------------------------------------------------
+// ============================================================
 // ZONAS
-// ------------------------------------------------------------
+// ============================================================
 function z01(worldY) {
   return constrain(worldY / worldH, 0, 1);
 }
@@ -549,16 +505,23 @@ function zoneAt(worldY) {
   return "ocean";
 }
 
-// ------------------------------------------------------------
-// UI / CAPTION
-// ------------------------------------------------------------
-function drawCaption(e) {
-  const a = 220 * e;
-  noStroke();
-  fill(25, 25, 25, a);
-  textAlign(LEFT, BOTTOM);
-  textSize(16);
-  text("Zoom out — Estuário / Delta (estilo ilustrado)", 18, height - 18);
+// ============================================================
+// HELPERS
+// ============================================================
+function smoothstep(a, b, x) {
+  const t = constrain((x - a) / (b - a), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+function easeInOutCubic(x) {
+  return x < 0.5 ? 4 * x * x * x : 1 - pow(-2 * x + 2, 3) / 2;
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  // recalcula velocidade (mantém 30s se você recarregar; resize durante execução ok)
+  const travelFrames = max(1, (TOTAL_SECONDS - ZOOM_SECONDS) * FPS);
+  speed = (worldH - height) / travelFrames;
 }
 
 // ------------------------------------------------------------
@@ -580,4 +543,5 @@ function jitter1(pass) {
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   // mapa continua válido; se quiser map responsivo, posso adaptar depois
+
 }

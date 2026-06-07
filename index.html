@@ -1,16 +1,338 @@
-<!doctype html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Rio — satélite suave</title>
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoTime - Central de Monitoramento</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2e7d32">
+  
   <style>
-    html, body { margin:0; padding:0; overflow:hidden; background:#05080c; }
-    canvas { display:block; }
+    :root {
+      --bg-dark: #0f1411;
+      --bg-card: #161f1a;
+      --accent-green: #00ff66;
+      --text-main: #e0e6e3;
+      --text-muted: #788880;
+      --border-color: #233329;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 800px;
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+      color: var(--accent-green);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    @media (max-width: 600px) {
+      .dashboard { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h2 {
+      font-size: 1rem;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-left: 3px solid var(--accent-green);
+      padding-left: 8px;
+    }
+
+    /* Módulo do Cronômetro Circular */
+    .timer-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 20px auto;
+    }
+
+    .timer-svg {
+      transform: rotate(-90deg);
+      width: 200px;
+      height: 200px;
+    }
+
+    .timer-svg circle {
+      fill: none;
+      stroke-width: 8;
+    }
+
+    .timer-bg { stroke: var(--border-color); }
+    
+    .timer-progress {
+      stroke: var(--accent-green);
+      stroke-dasharray: 565; /* 2 * PI * r (r=90) */
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear;
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .controls select, .controls button, .todo-input-group input, .todo-input-group button, textarea {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      width: 100%;
+      outline: none;
+    }
+
+    .controls button, .todo-input-group button {
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .controls button:hover, .todo-input-group button:hover {
+      background: var(--accent-green);
+      color: var(--bg-dark);
+    }
+
+    /* Lista de Tarefas */
+    .todo-list { list-style: none; max-height: 200px; overflow-y: auto; }
+    .todo-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .todo-item input[type="checkbox"] { margin-right: 10px; accent-color: var(--accent-green); }
+    .todo-item.done span { text-decoration: line-through; color: var(--text-muted); }
+
+    /* Anotações */
+    textarea { height: 100%; resize: none; min-height: 150px; }
   </style>
 </head>
 <body>
-  <script src="sketch.js"></script>
+
+  <header>
+    <h1>ECOTIME // CENTRAL DE MONITORAMENTO</h1>
+  </header>
+
+  <main class="dashboard">
+    <section class="panel">
+      <h2>Módulos & Tempo</h2>
+      <div class="controls">
+        <select id="module-select">
+          <option value="25">Engenharia Ambiental (25 min)</option>
+          <option value="50">Dev - Gestão Ambiental (50 min)</option>
+          <option value="5">Pausa Curta (5 min)</option>
+        </select>
+      </div>
+      
+      <div class="timer-container">
+        <svg class="timer-svg">
+          <circle class="timer-bg" cx="100" cy="100" r="90"></circle>
+          <circle class="timer-progress" id="progress-circle" cx="100" cy="100" r="90"></circle>
+        </svg>
+        <div class="timer-text" id="timer-display">25:00</div>
+      </div>
+
+      <div class="controls">
+        <button id="btn-start">INICIAR MONITORAMENTO</button>
+      </div>
+    </section>
+
+    <section class="panel" style="gap: 15px;">
+      <div>
+        <h2>Tarefas Ativas</h2>
+        <div class="todo-input-group" style="display: flex; gap: 5px;">
+          <input type="text" id="todo-input" placeholder="Nova tarefa...">
+          <button id="btn-add-todo" style="width: auto;">+</button>
+        </div>
+        <ul class="todo-list" id="todo-list"></ul>
+      </div>
+
+      <div style="flex-grow: 1; display: flex; flex-direction: column;">
+        <h2>Anotações de Campo</h2>
+        <textarea id="notes-area" placeholder="Digite insights de código ou observações ambientais..."></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ---- Registro do Service Worker ----
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log("Service Worker ativo."))
+        .catch(err => console.log("Erro no SW:", err));
+    }
+
+    // ---- Lógica do Temporizador Circular ----
+    let timer;
+    let timeLeft;
+    let totalTime;
+    let isRunning = false;
+
+    const timerDisplay = document.getElementById('timer-display');
+    const progressCircle = document.getElementById('progress-circle');
+    const btnStart = document.getElementById('btn-start');
+    const moduleSelect = document.getElementById('module-select');
+    const circumference = 2 * Math.PI * 90;
+
+    function setProgress(percent) {
+      const offset = circumference - (percent / 100) * circumference;
+      progressCircle.style.strokeDashoffset = offset;
+    }
+
+    function updateTimerDisplay(seconds) {
+      const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const secs = (seconds % 60).toString().padStart(2, '0');
+      timerDisplay.textContent = `${mins}:${secs}`;
+    }
+
+    function startTimer() {
+      if (isRunning) {
+        clearInterval(timer);
+        btnStart.textContent = "RETOMAR";
+        isRunning = false;
+        return;
+      }
+
+      if (!timeLeft) {
+        totalTime = parseInt(moduleSelect.value) * 60;
+        timeLeft = totalTime;
+      }
+
+      isRunning = true;
+      btnStart.textContent = "PAUSAR";
+
+      timer = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay(timeLeft);
+        
+        const percent = (timeLeft / totalTime) * 100;
+        setProgress(percent);
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          isRunning = false;
+          btnStart.textContent = "INICIAR";
+          timeLeft = null;
+          setProgress(100);
+          alert("Ciclo de monitoramento finalizado!");
+        }
+      }, 1000);
+    }
+
+    moduleSelect.addEventListener('change', () => {
+      clearInterval(timer);
+      isRunning = false;
+      btnStart.textContent = "INICIAR MONITORAMENTO";
+      timeLeft = null;
+      timerDisplay.textContent = `${moduleSelect.value.padStart(2, '0')}:00`;
+      setProgress(100);
+    });
+
+    btnStart.addEventListener('click', startTimer);
+
+    // ---- Lógica das Tarefas (LocalStorage para persistência temporária) ----
+    const todoInput = document.getElementById('todo-input');
+    const btnAddTodo = document.getElementById('btn-add-todo');
+    const todoList = document.getElementById('todo-list');
+
+    function addTodoElement(text, done = false) {
+      const li = document.createElement('li');
+      li.className = `todo-item ${done ? 'done' : ''}`;
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = done;
+      checkbox.addEventListener('change', () => {
+        li.classList.toggle('done');
+        saveTodos();
+      });
+
+      const span = document.createElement('span');
+      span.textContent = text;
+
+      li.appendChild(checkbox);
+      li.appendChild(span);
+      todoList.appendChild(li);
+    }
+
+    btnAddTodo.addEventListener('click', () => {
+      if (todoInput.value.trim() !== "") {
+        addTodoElement(todoInput.value.trim());
+        todoInput.value = "";
+        saveTodos();
+      }
+    });
+
+    function saveTodos() {
+      const todos = [];
+      document.querySelectorAll('.todo-item').forEach(item => {
+        todos.push({
+          text: item.querySelector('span').textContent,
+          done: item.querySelector('input').checked
+        });
+      });
+      localStorage.setItem('ecotime-todos', JSON.stringify(todos));
+    }
+
+    function loadTodos() {
+      const todos = JSON.parse(localStorage.getItem('ecotime-todos')) || [];
+      todos.forEach(todo => addTodoElement(todo.text, todo.done));
+    }
+
+    // ---- Lógica das Notas ----
+    const notesArea = document.getElementById('notes-area');
+    notesArea.addEventListener('input', () => {
+      localStorage.setItem('ecotime-notes', notesArea.value);
+    });
+
+    // Inicialização
+    setProgress(100);
+    loadTodos();
+    if(localStorage.getItem('ecotime-notes')) {
+      notesArea.value = localStorage.getItem('ecotime-notes');
+    }
+  </script>
 </body>
 </html>

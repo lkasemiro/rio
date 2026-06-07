@@ -1,0 +1,22 @@
+{
+  "name": "Tempo",
+  "short_name": "EcoTime",
+  "description": "Central de monitoramento de tempo e tarefas para engenharia e desenvolvimento.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121814",
+  "theme_color": "#2e7d32",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/dashboard.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/dashboard.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

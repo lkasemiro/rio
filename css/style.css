@@ -1,0 +1,616 @@
+/* ==========================================================
+   RESET
+========================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+
+    --bg: #0B1020;
+    --card: #151B2F;
+    --card-hover: #1D2642;
+
+    --text: #FFFFFF;
+    --text-secondary: #AAB5C8;
+
+    --border: rgba(255,255,255,.08);
+
+    --radius: 20px;
+
+    --shadow:
+        0 12px 30px rgba(0,0,0,.25);
+
+    --activity-color: #005BAC;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+
+    font-family: "Inter", sans-serif;
+
+    background: var(--bg);
+
+    color: var(--text);
+
+    min-height: 100vh;
+}
+
+/* ==========================================================
+   APP
+========================================================== */
+
+#app {
+
+    width: 100%;
+    max-width: 1400px;
+
+    margin: auto;
+
+    padding: 20px;
+}
+
+/* ==========================================================
+   HEADER
+========================================================== */
+
+.topbar {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 30px;
+
+    gap: 20px;
+}
+
+.brand {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+.brand-icon {
+
+    width: 60px;
+
+    height: 60px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 28px;
+
+    background: linear-gradient(
+        135deg,
+        #005BAC,
+        #2E7D32
+    );
+}
+
+.brand h1 {
+
+    font-size: 2rem;
+
+    font-weight: 800;
+}
+
+.brand p {
+
+    color: var(--text-secondary);
+
+    font-size: .9rem;
+}
+
+.header-btn {
+
+    border: none;
+
+    background: #005BAC;
+
+    color: white;
+
+    padding: 12px 20px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-weight: 600;
+}
+
+/* ==========================================================
+   VIEWS
+========================================================== */
+
+.view {
+
+    display: none;
+}
+
+.view.active {
+
+    display: block;
+}
+
+/* ==========================================================
+   DASHBOARD
+========================================================== */
+
+.dashboard-card {
+
+    background: var(--card);
+
+    border-radius: var(--radius);
+
+    padding: 30px;
+
+    border: 1px solid var(--border);
+
+    margin-bottom: 25px;
+
+    box-shadow: var(--shadow);
+}
+
+.dashboard-card h2 {
+
+    text-align: center;
+
+    margin-bottom: 25px;
+}
+
+.chart-container {
+
+    position: relative;
+
+    width: 100%;
+
+    max-width: 500px;
+
+    margin: auto;
+}
+
+.chart-center {
+
+    position: absolute;
+
+    top: 50%;
+
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    text-align: center;
+
+    pointer-events: none;
+}
+
+.chart-center span {
+
+    display: block;
+
+    color: var(--text-secondary);
+}
+
+.chart-center strong {
+
+    font-size: 2rem;
+
+    font-weight: 800;
+}
+
+/* ==========================================================
+   RESUMO
+========================================================== */
+
+.summary-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+
+    gap: 20px;
+
+    margin-bottom: 30px;
+}
+
+.summary-card {
+
+    background: var(--card);
+
+    border-radius: var(--radius);
+
+    padding: 20px;
+
+    border: 1px solid var(--border);
+}
+
+.summary-card h3 {
+
+    color: var(--text-secondary);
+
+    font-size: .9rem;
+
+    margin-bottom: 10px;
+}
+
+.summary-card strong {
+
+    font-size: 2rem;
+}
+
+/* ==========================================================
+   ATIVIDADES
+========================================================== */
+
+.activities-header {
+
+    margin-bottom: 20px;
+}
+
+.activities-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+
+    gap: 20px;
+}
+
+.activity-card {
+
+    background: var(--card);
+
+    border-radius: var(--radius);
+
+    padding: 20px;
+
+    cursor: pointer;
+
+    transition: .25s;
+
+    border-left: 8px solid var(--activity-color);
+
+    border-top: 1px solid var(--border);
+
+    border-right: 1px solid var(--border);
+
+    border-bottom: 1px solid var(--border);
+}
+
+.activity-card:hover {
+
+    transform: translateY(-4px);
+
+    background: var(--card-hover);
+}
+
+.activity-card h3 {
+
+    margin-bottom: 12px;
+}
+
+.activity-card .hours {
+
+    font-size: 2rem;
+
+    font-weight: 800;
+}
+
+.activity-card .category {
+
+    color: var(--text-secondary);
+
+    margin-top: 10px;
+}
+
+/* ==========================================================
+   ACTIVITY HERO
+========================================================== */
+
+.activity-hero {
+
+    padding: 40px;
+
+    border-radius: 24px;
+
+    margin-bottom: 25px;
+
+    background: var(--activity-color);
+
+    box-shadow: var(--shadow);
+}
+
+.activity-hero h1 {
+
+    margin-top: 20px;
+
+    font-size: 2.5rem;
+}
+
+.activity-hero p {
+
+    margin-top: 10px;
+
+    opacity: .9;
+}
+
+.back-btn {
+
+    border: none;
+
+    background: rgba(255,255,255,.15);
+
+    color: white;
+
+    padding: 10px 18px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+}
+
+/* ==========================================================
+   MÉTRICAS
+========================================================== */
+
+.metrics-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+.metric-card {
+
+    background: var(--card);
+
+    padding: 20px;
+
+    border-radius: var(--radius);
+
+    border: 1px solid var(--border);
+}
+
+.metric-card span {
+
+    display: block;
+
+    color: var(--text-secondary);
+
+    margin-bottom: 8px;
+}
+
+.metric-card strong {
+
+    font-size: 2rem;
+}
+
+/* ==========================================================
+   PAINÉIS
+========================================================== */
+
+.panel {
+
+    background: var(--card);
+
+    border-radius: var(--radius);
+
+    border: 1px solid var(--border);
+
+    padding: 25px;
+
+    margin-bottom: 25px;
+}
+
+.panel h2 {
+
+    margin-bottom: 20px;
+}
+
+/* ==========================================================
+   TIMER
+========================================================== */
+
+.timer-display {
+
+    text-align: center;
+
+    font-size: 4rem;
+
+    font-weight: 800;
+
+    margin: 25px 0;
+}
+
+.timer-buttons {
+
+    display: flex;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+
+    border: none;
+
+    padding: 14px 20px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-weight: 600;
+}
+
+.btn-primary {
+
+    background: #2E7D32;
+
+    color: white;
+}
+
+.btn-secondary {
+
+    background: #F9A825;
+
+    color: black;
+}
+
+.btn-danger {
+
+    background: #D84315;
+
+    color: white;
+}
+
+/* ==========================================================
+   FORMULÁRIOS
+========================================================== */
+
+.add-row {
+
+    display: flex;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+.add-row input {
+
+    flex: 1;
+}
+
+input,
+textarea {
+
+    width: 100%;
+
+    background: #0F1528;
+
+    border: 1px solid var(--border);
+
+    color: white;
+
+    padding: 12px;
+
+    border-radius: 12px;
+
+    font-family: inherit;
+}
+
+.add-row button {
+
+    border: none;
+
+    background: var(--activity-color);
+
+    color: white;
+
+    padding: 12px 18px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+}
+
+.meta-row {
+
+    margin-bottom: 15px;
+}
+
+.meta-row label {
+
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: var(--text-secondary);
+}
+
+/* ==========================================================
+   LISTAS
+========================================================== */
+
+#listaTarefas,
+#listaProjetos,
+#listaNotas {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.list-item {
+
+    background: #0F1528;
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    padding: 15px;
+}
+
+/* ==========================================================
+   RESPONSIVO
+========================================================== */
+
+@media (max-width: 768px) {
+
+    .topbar {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+    }
+
+    .timer-display {
+
+        font-size: 2.5rem;
+    }
+
+    .activity-hero h1 {
+
+        font-size: 2rem;
+    }
+
+    .add-row {
+
+        flex-direction: column;
+    }
+
+    .timer-buttons {
+
+        flex-direction: column;
+    }
+
+}

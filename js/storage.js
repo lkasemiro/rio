@@ -132,6 +132,22 @@ const DEFAULT_DATA = {
             cor: "#6D4C41",
             metaHorasSemana: 4,
             metaTarefasSemana: 0
+        }),
+
+        Tabagismo: criarAtividade({
+            nome: "Vícios",
+            categoria: "Pessoal",
+            cor: "#000000",
+            metaHorasSemana: 0,
+            metaTarefasSemana: 0
+        }),
+        
+        rooting: criarAtividade({
+            nome: "Rooting",
+            categoria: "Pessoal",
+            cor: "#c0115a",
+            metaHorasSemana: 0,
+            metaTarefasSemana: 0
         })
 
     }

@@ -614,3 +614,298 @@ textarea {
     }
 
 }
+/* ==========================================================
+   MARATONAS
+========================================================== */
+
+#marathonView {
+    display: none;
+}
+
+#marathonView.active {
+    display: block;
+}
+
+/* ==========================================================
+   GRID
+========================================================== */
+
+#marathonsGrid {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* ==========================================================
+   HERO
+========================================================== */
+
+#marathonHero {
+    margin-bottom: 1.5rem;
+}
+
+/* ==========================================================
+   PROGRESSO
+========================================================== */
+
+#marathonProgress {
+    width: 100%;
+    height: 28px;
+    margin-top: 1rem;
+    border: none;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+#marathonProgress::-webkit-progress-bar {
+    background: rgba(255,255,255,0.08);
+    border-radius: 999px;
+}
+
+#marathonProgress::-webkit-progress-value {
+    background: linear-gradient(
+        90deg,
+        #7B1FA2,
+        #B388FF
+    );
+    border-radius: 999px;
+}
+
+#marathonProgress::-moz-progress-bar {
+    background: linear-gradient(
+        90deg,
+        #7B1FA2,
+        #B388FF
+    );
+}
+
+/* ==========================================================
+   LISTAS
+========================================================== */
+
+#listaTextos,
+#listaListas,
+#listaDuvidas,
+#listaFormulas,
+#listaDiario {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+}
+
+/* ==========================================================
+   ITENS
+========================================================== */
+
+.list-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 1rem;
+    transition: .2s;
+}
+
+.list-item:hover {
+    transform: translateY(-2px);
+}
+
+.list-item label {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    cursor: pointer;
+}
+
+.list-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.list-item p {
+    margin-top: .5rem;
+    line-height: 1.5;
+}
+
+.list-item small {
+    opacity: .7;
+    display: block;
+    margin-bottom: .4rem;
+}
+
+/* ==========================================================
+   PAINÉIS MARATONA
+========================================================== */
+
+#marathonView .panel {
+
+    background: rgba(255,255,255,0.04);
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    border-radius: 18px;
+
+    padding: 1.2rem;
+
+    margin-bottom: 1.2rem;
+
+    backdrop-filter: blur(10px);
+
+}
+
+#marathonView .panel h2 {
+
+    margin-bottom: 1rem;
+
+    font-size: 1.05rem;
+
+    font-weight: 700;
+
+}
+
+/* ==========================================================
+   TEXTAREAS
+========================================================== */
+
+#marathonView textarea {
+
+    width: 100%;
+
+    min-height: 120px;
+
+    resize: vertical;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(255,255,255,0.12);
+
+    background: rgba(255,255,255,0.04);
+
+    color: inherit;
+
+    padding: 1rem;
+
+    font-family: inherit;
+
+    margin-bottom: 1rem;
+
+}
+
+#marathonView textarea:focus {
+
+    outline: none;
+
+    border-color: #7B1FA2;
+
+}
+
+/* ==========================================================
+   INPUTS
+========================================================== */
+
+#marathonView input[type="text"] {
+
+    flex: 1;
+
+    padding: .9rem;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(255,255,255,0.12);
+
+    background: rgba(255,255,255,0.04);
+
+    color: inherit;
+
+}
+
+#marathonView input[type="text"]:focus {
+
+    outline: none;
+
+    border-color: #7B1FA2;
+
+}
+
+/* ==========================================================
+   LINHA DE ADIÇÃO
+========================================================== */
+
+.add-row {
+
+    display: flex;
+
+    gap: .75rem;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+}
+
+.add-row button {
+
+    white-space: nowrap;
+
+}
+
+/* ==========================================================
+   DESEMPENHO LISTAS
+========================================================== */
+
+.lista-score {
+
+    display: flex;
+
+    gap: 1rem;
+
+    margin-top: .75rem;
+
+}
+
+.lista-score input {
+
+    width: 90px;
+
+    padding: .4rem;
+
+    text-align: center;
+
+}
+
+/* ==========================================================
+   MÉTRICAS
+========================================================== */
+
+#marathonView .metric-card {
+
+    min-height: 90px;
+
+}
+
+#marathonView .metric-card strong {
+
+    font-size: 1.6rem;
+
+}
+
+/* ==========================================================
+   RESPONSIVO
+========================================================== */
+
+@media (max-width: 768px) {
+
+    .add-row {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+    }
+
+    .add-row button {
+
+        width: 100%;
+
+    }
+
+}

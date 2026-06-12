@@ -19,14 +19,21 @@ function atualizarDashboard() {
 
     const dados = AtlasStorage.get();
 
+    if (!dados) return;
+
     renderizarCards(dados);
 
     atualizarResumo(dados);
 
     renderizarGrafico(dados);
 
-}
+    if (typeof renderizarMaratonas === "function") {
 
+        renderizarMaratonas();
+
+    }
+
+}
 /* ==========================================================
    RESUMO SUPERIOR
 ========================================================== */

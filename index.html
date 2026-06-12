@@ -170,6 +170,22 @@
             <!-- preenchido via JS -->
 
         </div>
+        <!-- ===========================================
+            MARATONAS
+        =========================================== -->
+
+        <div class="activities-header">
+
+            <h2>
+                Maratonas
+            </h2>
+
+        </div>
+
+        <div id="marathonsGrid"
+            class="activities-grid">
+
+        </div>
 
     </section>
 
@@ -414,6 +430,227 @@
         </div>
 
     </section>
+            <!-- ===================================================
+            MARATHON VIEW
+        ==================================================== -->
+
+        <section id="marathonView"
+                class="view">
+
+            <div id="marathonHero"
+                class="activity-hero">
+
+                <button id="btnVoltarMarathon"
+                        class="back-btn">
+
+                    ← Dashboard
+
+                </button>
+
+                <h1 id="marathonNome">
+
+                    Maratona
+
+                </h1>
+
+                <p id="marathonPrazo">
+
+                    Prazo
+
+                </p>
+
+            </div>
+
+            <!-- RESUMO -->
+
+            <div class="metrics-grid">
+
+                <div class="metric-card">
+
+                    <span>Meta</span>
+
+                    <strong id="marathonMeta">
+
+                        0h
+
+                    </strong>
+
+                </div>
+
+                <div class="metric-card">
+
+                    <span>Realizado</span>
+
+                    <strong id="marathonRealizado">
+
+                        0h
+
+                    </strong>
+
+                </div>
+
+                <div class="metric-card">
+
+                    <span>Faltam</span>
+
+                    <strong id="marathonFaltam">
+
+                        0h
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <!-- PROGRESSO -->
+
+            <div class="panel">
+
+                <h2>
+                    Progresso
+                </h2>
+
+                <progress id="marathonProgress"
+                        value="0"
+                        max="100"
+                        style="
+                            width:100%;
+                            height:30px;
+                        ">
+                </progress>
+
+            </div>
+
+            <!-- TEXTOS -->
+
+            <div class="panel">
+
+                <h2>
+                    Leituras
+                </h2>
+
+                <div class="add-row">
+
+                    <input type="text"
+                        id="novoTexto"
+                        placeholder="Capítulo ou texto">
+
+                    <button id="btnAdicionarTexto">
+
+                        Adicionar
+
+                    </button>
+
+                </div>
+
+                <div id="listaTextos">
+
+                </div>
+
+            </div>
+
+            <!-- LISTAS -->
+
+            <div class="panel">
+
+                <h2>
+                    Listas de Exercícios
+                </h2>
+
+                <div class="add-row">
+
+                    <input type="text"
+                        id="novaLista"
+                        placeholder="Lista">
+
+                    <button id="btnAdicionarLista">
+
+                        Adicionar
+
+                    </button>
+
+                </div>
+
+                <div id="listaListas">
+
+                </div>
+
+            </div>
+
+            <!-- DÚVIDAS -->
+
+            <div class="panel">
+
+                <h2>
+                    Dúvidas
+                </h2>
+
+                <textarea id="novaDuvida"
+                        rows="4"></textarea>
+
+                <button id="btnAdicionarDuvida"
+                        class="btn-primary">
+
+                    Salvar
+
+                </button>
+
+                <div id="listaDuvidas">
+
+                </div>
+
+            </div>
+
+            <!-- FÓRMULAS -->
+
+            <div class="panel">
+
+                <h2>
+                    Fórmulas e Macetes
+                </h2>
+
+                <textarea id="novaFormula"
+                        rows="5"></textarea>
+
+                <button id="btnAdicionarFormula"
+                        class="btn-primary">
+
+                    Salvar
+
+                </button>
+
+                <div id="listaFormulas">
+
+                </div>
+
+            </div>
+
+            <!-- DIÁRIO -->
+
+            <div class="panel">
+
+                <h2>
+                    Diário de Estudo
+                </h2>
+
+                <textarea id="novoRegistro"
+                        rows="5"></textarea>
+
+                <button id="btnAdicionarRegistro"
+                        class="btn-primary">
+
+                    Salvar
+
+                </button>
+
+                <div id="listaDiario">
+
+                </div>
+
+            </div>
+
+        </section>
 
 </div>
 
@@ -428,7 +665,7 @@
 <script src="js/activity.js"></script>
 
 <script src="js/timer.js"></script>
-
+<script src="js/marathon.js"></script>
 <script src="js/app.js"></script>
 
 <script>

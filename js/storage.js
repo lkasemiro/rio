@@ -40,40 +40,31 @@ function criarAtividade({
 
     };
 
-}
-
+};
 /* ==========================================================
    BANCO PADRÃO
 ========================================================== */
 
 const DEFAULT_DATA = {
 
-    versao: "1.0.0",
+    versao: "1.1.0",
 
     criadoEm: new Date().toISOString(),
 
     configuracoes: {
-
         tema: "dark",
-
         ultimaExportacao: null
-
     },
 
     ui: {
-
-        atividadeSelecionada: null
-
+        atividadeSelecionada: null,
+        maratonaSelecionada: null
     },
 
     timer: {
-
         atividadeAtiva: null,
-
         inicioSessao: null,
-
         pausado: true
-
     },
 
     atividades: {
@@ -134,26 +125,89 @@ const DEFAULT_DATA = {
             metaTarefasSemana: 0
         }),
 
-        Tabagismo: criarAtividade({
+        tabagismo: criarAtividade({
             nome: "Vícios",
             categoria: "Pessoal",
             cor: "#000000",
             metaHorasSemana: 0,
             metaTarefasSemana: 0
         }),
-        
+
         rooting: criarAtividade({
             nome: "Rooting",
             categoria: "Pessoal",
-            cor: "#c0115a",
+            cor: "#C0115A",
             metaHorasSemana: 0,
             metaTarefasSemana: 0
         })
 
+    },
+
+    maratonas: {
+
+        estatistica_p2: {
+
+            id: "estatistica_p2",
+
+            nome: "P2 Estatística",
+
+            atividadeVinculada: "estatistica",
+
+            cor: "#7B1FA2",
+
+            inicio: dataHoje(),
+
+            prazo: "2026-06-17",
+
+            metaHoras: 40,
+
+            metaDiaria: 8,
+
+            concluida: false,
+
+            textos: [],
+            listas: [],
+            duvidas: [],
+            formulas: [],
+            macetes: [],
+            diario: [],
+            metasDiarias: []
+
+        },
+
+        sig_p2: {
+
+            id: "sig_p2",
+
+            nome: "P2 SIG",
+
+            atividadeVinculada: "sig",
+
+            cor: "#2E7D32",
+
+            inicio: dataHoje(),
+
+            prazo: "2026-06-16",
+
+            metaHoras: 20,
+
+            metaDiaria: 4,
+
+            concluida: false,
+
+            textos: [],
+            listas: [],
+            duvidas: [],
+            formulas: [],
+            macetes: [],
+            diario: [],
+            metasDiarias: []
+
+        }
+
     }
 
 };
-
 /* ==========================================================
    STORAGE
 ========================================================== */
@@ -188,7 +242,8 @@ const AtlasStorage = {
         if (
             !banco.ui ||
             !banco.timer ||
-            !banco.atividades
+            !banco.atividades ||
+            !banco.maratonas
         ) {
 
             localStorage.setItem(

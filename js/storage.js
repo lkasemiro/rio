@@ -73,38 +73,70 @@ const DEFAULT_DATA = {
             nome: "DMA-CEDAE",
             categoria: "Profissional",
             cor: "#005BAC",
-            metaHorasSemana: 20,
-            metaTarefasSemana: 5
+            metaHorasSemana: 30,
+            metaTarefasSemana: 6
         }),
 
-        estatistica: criarAtividade({
-            nome: "Estatística",
+        estudos_impactos_ambientais: criarAtividade({
+            nome: "Estudos de impactos ambientais",
             categoria: "Acadêmico",
-            cor: "#7B1FA2",
-            metaHorasSemana: 10,
-            metaTarefasSemana: 3
+            cor: "#c4b428",
+            metaHorasSemana: 4,
+            metaTarefasSemana: 1
         }),
 
-        sig: criarAtividade({
-            nome: "SIG",
+        botanica_ambiental: criarAtividade({
+            nome: "Botânica ambiental",
             categoria: "Acadêmico",
             cor: "#2E7D32",
-            metaHorasSemana: 8,
-            metaTarefasSemana: 3
+            metaHorasSemana: 2,
+            metaTarefasSemana: 1
         }),
 
-        calculo: criarAtividade({
-            nome: "Cálculo",
+        desenvolvimento_produtos_sustentaveis: criarAtividade({
+            nome: "Desenvolvimento de produtos sustentáveis",
             categoria: "Acadêmico",
-            cor: "#D84315",
-            metaHorasSemana: 6,
-            metaTarefasSemana: 2
+            cor: "#bbd815",
+            metaHorasSemana: 3,
+            metaTarefasSemana: 1
+        }),
+
+        engenharia_agroecologica: criarAtividade({
+            nome: "Engenharia Agroecológica",
+            categoria: "Acadêmico",
+            cor: "#f02caf",
+            metaHorasSemana: 3,
+            metaTarefasSemana: 1
+        }),
+
+         topicos_eng_ambienatl: criarAtividade({
+            nome: "Tópicos Especiais em Engenharia do Meio Ambiente",
+            categoria: "Acadêmico",
+            cor: "#dd3705",
+            metaHorasSemana: 3,
+            metaTarefasSemana: 1
+        }),
+
+         processos_produtivos_sustentaveis: criarAtividade({
+            nome: "Processos Produtivos Sustentáveis",
+            categoria: "Acadêmico",
+            cor: "#f8731b",
+            metaHorasSemana: 3,
+            metaTarefasSemana: 1
+        }),
+
+         modelagem_sistemas_ambientais: criarAtividade({
+            nome: "Modelagem de Sistemas Ambientais",
+            categoria: "Acadêmico",
+            cor: "#339de4",
+            metaHorasSemana: 4,
+            metaTarefasSemana: 1
         }),
 
         portfolio: criarAtividade({
             nome: "Portfólio",
             categoria: "Profissional",
-            cor: "#00897B",
+            cor: "#c254a6",
             metaHorasSemana: 5,
             metaTarefasSemana: 2
         }),
@@ -112,7 +144,7 @@ const DEFAULT_DATA = {
         hobbies: criarAtividade({
             nome: "Hobbies",
             categoria: "Pessoal",
-            cor: "#F9A825",
+            cor: "#f79c0b",
             metaHorasSemana: 3,
             metaTarefasSemana: 0
         }),
@@ -136,7 +168,7 @@ const DEFAULT_DATA = {
         rooting: criarAtividade({
             nome: "Rooting",
             categoria: "Pessoal",
-            cor: "#C0115A",
+            cor: "#702bc0",
             metaHorasSemana: 0,
             metaTarefasSemana: 0
         })
